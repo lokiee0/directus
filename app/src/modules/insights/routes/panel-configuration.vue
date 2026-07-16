@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Panel } from '@directus/extensions';
-import dompurify from 'dompurify';
 import { assign, clone, isUndefined, omitBy } from 'lodash';
 import { nanoid } from 'nanoid/non-secure';
 import { storeToRefs } from 'pinia';
@@ -69,12 +68,8 @@ const customOptionsFields = computed(() => {
 	return undefined;
 });
 
-function isSVG(path: string) {
-	return path.startsWith('<svg');
-}
-
-function sanitizeSVG(svg: string) {
-	return dompurify.sanitize(svg, { USE_PROFILES: { svg: true, svgFilters: true } });
+function getPreviewUrl(preview: string) {
+	return preview.startsWith('<svg') ? `data:image/svg+xml,${encodeURIComponent(preview)}` : preview;
 }
 
 const configRow = computed(() => {
@@ -165,9 +160,7 @@ const stageChanges = () => {
 				>
 					<div class="preview">
 						<template v-if="pan.preview">
-							<!-- eslint-disable-next-line vue/no-v-html -->
-							<span v-if="isSVG(pan.preview)" class="svg" v-html="sanitizeSVG(pan.preview)" />
-							<img v-else :src="pan.preview" alt="" />
+							<img :src="getPreviewUrl(pan.preview)" alt="" />
 						</template>
 
 						<span v-else class="fallback">
@@ -320,19 +313,6 @@ const stageChanges = () => {
 	inline-size: 100%;
 	block-size: 100%;
 	object-fit: cover;
-}
-
-.preview .svg {
-	display: contents;
-}
-
-.preview :deep(svg) {
-	inline-size: 100%;
-	block-size: 100%;
-}
-
-.preview :deep(svg) .glow {
-	filter: drop-shadow(0 0 0.25rem var(--theme--primary-subdued));
 }
 
 .preview .fallback {
