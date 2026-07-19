@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Collection } from '@directus/types';
-import dompurify from 'dompurify';
 import { orderBy } from 'lodash';
 import { computed, toRefs, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -123,12 +122,8 @@ const configRow = computed(() => {
 	return Math.ceil((indexInGroup + 1) / columns) + 1;
 });
 
-function isSVG(path: string) {
-	return path.startsWith('<svg');
-}
-
-function sanitizeSVG(svg: string) {
-	return dompurify.sanitize(svg, { USE_PROFILES: { svg: true, svgFilters: true } });
+function getPreviewUrl(preview: string) {
+	return preview.startsWith('<svg') ? `data:image/svg+xml,${encodeURIComponent(preview)}` : preview;
 }
 
 function toggleInterface(id: string) {
@@ -155,9 +150,7 @@ function toggleInterface(id: string) {
 				>
 					<div class="preview">
 						<template v-if="inter.preview">
-							<!-- eslint-disable-next-line vue/no-v-html -->
-							<span v-if="isSVG(inter.preview)" class="svg" v-html="sanitizeSVG(inter.preview)" />
-							<img v-else :src="inter.preview" alt="" />
+							<img :src="getPreviewUrl(inter.preview)" alt="" />
 						</template>
 
 						<span v-else class="fallback">
@@ -244,19 +237,6 @@ function toggleInterface(id: string) {
 	inline-size: 100%;
 	block-size: 100%;
 	object-fit: cover;
-}
-
-.preview .svg {
-	display: contents;
-}
-
-.preview :deep(svg) {
-	inline-size: 100%;
-	block-size: 100%;
-}
-
-.preview :deep(svg) .glow {
-	filter: drop-shadow(0 0 0.25rem var(--theme--primary-subdued));
 }
 
 .preview .fallback {
